@@ -7,7 +7,7 @@ function checkForAuthentication(req, res, next) {
       message: "Unauthorized",
     });
   }
-  const token = userUid.split("Bearer ")[1];
+  const token = userUid?.startsWith("Bearer ")? userUid.split("Bearer ")[1] : null ;
   const user = getUser(token);
   if (!user) {
     return res.status(401).json({
