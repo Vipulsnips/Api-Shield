@@ -1,10 +1,14 @@
 const mongoose = require('mongoose');
-
+const crypto = require('crypto');
 const apiKeySchema = new mongoose.Schema({
     key:{
         type:String,
-        required:true,
         unique:true
+    },
+    service:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"Service",
+        required:true
     },
     owner:{
         type:mongoose.Schema.Types.ObjectId,
@@ -17,5 +21,11 @@ const apiKeySchema = new mongoose.Schema({
     }
 },{timestamps:true});
 
-const apiKey=mongoose.model('apiKey',apiKeySchema);
-module.exports = apiKey
+apiKeySchema.pre('save',function(){
+    if(this.key) return;
+    this.key="apsk_"+ crypto.randomBytes(24).toString("hex");
+    return;
+})
+
+const ApiKey=mongoose.model('ApiKey',apiKeySchema);
+module.exports = ApiKey;

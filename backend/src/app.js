@@ -3,6 +3,7 @@ const connectToMongoDB = require("./connect");
 const app = express();
 const authRouter = require("./routers/auth");
 const serviceRouter = require("./routers/service");
+const apiKeyRouter = require("./routers/apiKey");
 const { checkForAuthentication } = require("./middlewares/auth");
 
 const PORT = 8000;
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRouter);
 app.use("/api/services",checkForAuthentication,serviceRouter);
+app.use("/api/apiKeys",checkForAuthentication,apiKeyRouter);
 app.listen(PORT, () => {
   console.log(`server working at ${PORT}`);
 });
