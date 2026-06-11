@@ -30,10 +30,13 @@ async function handleRequest(req, res) {
       url: forwardUrl,
       method: req.method,
       data: req.body,
-      params: req.query
+      params: req.query,
     });
     return res.status(response.status).send(response.data);
   } catch (error) {
+    if (error.response) {
+      return res.status(error.response.status).send(error.response.data);
+    }
     return res.status(500).json({
       message: "Gateway Error",
     });
