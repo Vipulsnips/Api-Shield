@@ -1,4 +1,5 @@
 const ApiKey = require("../models/apiKey");
+const RequestLog = require("../models/requestLog");
 const Service = require("../models/service");
 const axios = require("axios");
 async function handleRequest(req, res) {
@@ -10,7 +11,7 @@ async function handleRequest(req, res) {
   const apiKey = await ApiKey.findOne({ key, active: true });
   if (!apiKey)
     return res.status(401).json({
-      message: "API Key required",
+      message: "Invalid API Key",
     });
   const slug = req.params.slug;
   const service = await Service.findOne({ slug });
@@ -23,8 +24,9 @@ async function handleRequest(req, res) {
       message: "API Key does not belong to this service",
     });
   }
-  const remainingPath = "/" + req.params.rest.join("/");
+  const remainingPath = req.params.rest ? "/" + req.params.rest.join("/") : "";
   const forwardUrl = service.baseurl.toString() + remainingPath;
+  const start = Date.now();
   try {
     const response = await axios({
       url: forwardUrl,
@@ -32,8 +34,27 @@ async function handleRequest(req, res) {
       data: req.body,
       params: req.query,
     });
+    const responseTime = Date.now() - start;
+    await RequestLog.create({
+      service: service._id,
+      apiKey: apiKey._id,
+      responseTime,
+      statusCode: response.status,
+      method: req.method,
+      path: remainingPath,
+    });
     return res.status(response.status).send(response.data);
   } catch (error) {
+    const responseTime = Date.now() - start;
+
+    await RequestLog.create({
+      service: service._id,
+      apiKey: apiKey._id,
+      responseTime,
+      statusCode: error.response?.status || 500,
+      method: req.method,
+      path: remainingPath,
+    });
     if (error.response) {
       return res.status(error.response.status).send(error.response.data);
     }
