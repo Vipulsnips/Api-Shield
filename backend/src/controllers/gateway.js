@@ -3,16 +3,7 @@ const RequestLog = require("../models/requestLog");
 const Service = require("../models/service");
 const axios = require("axios");
 async function handleRequest(req, res) {
-  const key = req.headers["x-api-key"];
-  if (!key)
-    return res.status(401).json({
-      message: "API Key required",
-    });
-  const apiKey = await ApiKey.findOne({ key, active: true });
-  if (!apiKey)
-    return res.status(401).json({
-      message: "Invalid API Key",
-    });
+  const apiKey = req.apiKey;
   const slug = req.params.slug;
   const service = await Service.findOne({ slug });
   if (!service)
