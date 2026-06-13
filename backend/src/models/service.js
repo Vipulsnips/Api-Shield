@@ -20,20 +20,25 @@ const serviceSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    healthStatus: {
+      type: String,
+      enum: ["healthy", "unhealthy"],
+      default: "healthy",
+    },
+    lastChecked: Date,
   },
   { timestamps: true },
 );
 
 serviceSchema.pre("save", function () {
-  if (!this.isModified('name')) return;
+  if (!this.isModified("name")) return;
   const slugName = slugify(this.name, {
     replacement: "-",
     trim: true,
-    lower:true,
-    strict:true
+    lower: true,
+    strict: true,
   });
   this.slug = slugName;
-  
 });
 const Service = mongoose.model("Service", serviceSchema);
 module.exports = Service;

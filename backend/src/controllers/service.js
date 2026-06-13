@@ -1,7 +1,17 @@
 const Service = require("../models/service");
-
+const axios = require("axios");
 async function createService(req, res) {
   const { name, baseurl } = req.body;
+  if (!name || !baseurl) {
+    return res.status(400).json({
+      message: "Name and baseurl required",
+    });
+  }
+  try {
+    new URL(baseurl);
+  } catch {
+    return res.status(400).json({ message: "Invalid baseurl" });
+  }
   const user = req.user;
   const service = await Service.create({
     name,
@@ -49,10 +59,42 @@ async function getMyServices(req, res) {
   const services = await Service.find({ owner });
   return res.json(services);
 }
+async function checkHealthById(req, res) {
+  const id = req.params.id;
+  const service = await Service.findById(id);
+  if (!service) {
+    return res.status(404).json({
+      message: "Service not found",
+    });
+  }
+  const user = req.user;
+  if (service.owner.toString() !== user._id.toString()) {
+    return res.status(403).json({
+      message: "Forbidden",
+    });
+  }
+  try {
+    await axios.get(service.baseurl.toString());
+    service.healthStatus = "healthy";
+    service.lastChecked = new Date();
+    await service.save();
+    return res.status(200).json({
+      status: "healthy",
+    });
+  } catch (err) {
+    service.healthStatus = "unhealthy";
+    service.lastChecked = new Date();
+    await service.save();
+    return res.status(200).json({
+      status: "unhealthy",
+    });
+  }
+}
 module.exports = {
   createService,
   getAllServices,
   getServiceById,
   deleteService,
   getMyServices,
+  checkHealthById,
 };

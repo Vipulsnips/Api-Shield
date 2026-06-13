@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const connectToMongoDB = require("./connect");
 const app = express();
@@ -8,23 +9,25 @@ const { checkForAuthentication } = require("./middlewares/auth");
 const gatewayRouter = require("./routers/gateway");
 const RequestLogRouter = require("./routers/requestLog");
 const redisClient = require("./config/redis");
-
-const PORT = 8000;
+const errorHandler = require("./middlewares/errorHandler");
+const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
 
 app.use("/api/auth", authRouter);
-app.use("/api/services",checkForAuthentication,serviceRouter);
-app.use("/api/apiKeys",checkForAuthentication,apiKeyRouter);
-app.use("/api/gateway",gatewayRouter);
-app.use("/api/analytics",RequestLogRouter);
+app.use("/api/services", checkForAuthentication, serviceRouter);
+app.use("/api/apiKeys", checkForAuthentication, apiKeyRouter);
+app.use("/api/gateway", gatewayRouter);
+app.use("/api/analytics", checkForAuthentication, RequestLogRouter);
+app.use(errorHandler);
+
 async function startServer() {
   try {
-    await connectToMongoDB("mongodb://127.0.0.1:27017/apishield");
+    await connectToMongoDB(process.env.MONGO_URL);
     console.log("mongodb connected");
 
     await redisClient.connect();
-    console.log("redis connected"); 
+    console.log("redis connected");
 
     app.listen(PORT, () => {
       console.log(`server working at ${PORT}`);

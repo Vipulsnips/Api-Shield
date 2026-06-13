@@ -72,13 +72,8 @@ async function getSummaryOfRequestLog(req, res) {
   });
 }
 
-async function getAllRequestLogs(req, res) {
-  const allRequestLogs = await RequestLog.find({});
-  return res.status(200).json(allRequestLogs);
-}
 
-module.exports={
+module.exports = {
   getRequestLogsById,
   getSummaryOfRequestLog,
-  getAllRequestLogs
-}
+};
