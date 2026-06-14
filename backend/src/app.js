@@ -13,7 +13,12 @@ const errorHandler = require("./middlewares/errorHandler");
 const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
-
+app.get("/", (req, res) => {
+  res.json({
+    message: "APIShield API is running",
+    docs: "https://github.com/Vipulsnips/Api-Shield#api-endpoints",
+  });
+});
 app.use("/api/auth", authRouter);
 app.use("/api/services", checkForAuthentication, serviceRouter);
 app.use("/api/apiKeys", checkForAuthentication, apiKeyRouter);
