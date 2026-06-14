@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { applyTimestamps } = require("./users");
 const slugify = require("slugify");
 const serviceSchema = new mongoose.Schema(
   {

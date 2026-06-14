@@ -18,12 +18,19 @@ async function handleRequest(req, res) {
   const remainingPath = req.params.rest ? "/" + req.params.rest.join("/") : "";
   const forwardUrl = service.baseurl.toString() + remainingPath;
   const start = Date.now();
+  const forwardHeaders = { ...req.headers };
+  delete forwardHeaders.host;
+  delete forwardHeaders.authorization;
+  delete forwardHeaders["x-api-key"];
+  delete forwardHeaders["content-length"];
   try {
     const response = await axios({
       url: forwardUrl,
       method: req.method,
       data: req.body,
       params: req.query,
+      headers: forwardHeaders,
+      validateStatus: () => true
     });
     const responseTime = Date.now() - start;
     await RequestLog.create({

@@ -1,5 +1,5 @@
 const express = require("express");
-const { getRequestLogsById, getSummaryOfRequestLog, getAllRequestLogs } = require("../controllers/requestLog");
+const { getRequestLogsById, getSummaryOfRequestLog} = require("../controllers/requestLog");
 const verifyServiceOwnership = require("../middlewares/verifyServiceOwnership");
 const router = express.Router();
 

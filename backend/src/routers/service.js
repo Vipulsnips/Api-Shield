@@ -6,15 +6,15 @@ const {
   getAllServices,
   getMyServices,
   deleteService,
-  checkHealthById
+  checkHealthById,
 } = require("../controllers/service");
 const router = express.Router();
 
 router.post("/", createService);
-router.get("/", getAllServices);
+router.get("/", restrictTo(["admin"]), getAllServices);
 router.get("/me", getMyServices);
 router.post("/:id/check-health", checkHealthById);
 router.get("/:id", getServiceById);
-router.delete("/:id",deleteService);
+router.delete("/:id", deleteService);
 
 module.exports = router;

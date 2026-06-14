@@ -14,7 +14,7 @@ async function signupUser(req, res) {
       token,
     });
   } catch (err) {
-    if (err === 11000) {
+    if (err.code === 11000) {
       return res.status(400).json({
         message: "User already exists",
       });
@@ -36,8 +36,9 @@ async function loginUser(req, res) {
         token,
       });
     }
+    return res.status(401).json({ message: "Invalid credentials" });
   } catch {
-    return res.redirect("/login");
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 function logoutUser(req, res) {
