@@ -29,7 +29,10 @@ async function handleRequest(req, res) {
       method: req.method,
       data: req.body,
       params: req.query,
-      headers: forwardHeaders,
+      headers: {
+        ...forwardHeaders,
+        "x-gateway-secret":service.gatewaySecret,
+      },
       validateStatus: () => true
     });
     const responseTime = Date.now() - start;

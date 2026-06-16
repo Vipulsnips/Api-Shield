@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const slugify = require("slugify");
+const crypto  = require("crypto");
 const serviceSchema = new mongoose.Schema(
   {
     name: {
@@ -19,6 +20,10 @@ const serviceSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    gatewaySecret:{
+      type:String,
+      required:true
+    },
     healthStatus: {
       type: String,
       enum: ["healthy", "unhealthy"],
@@ -28,7 +33,10 @@ const serviceSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
+serviceSchema.pre("save",function(){
+   if (!this.isNew) return;
+  this.gatewaySecret =  crypto.randomBytes(32).toString("hex");
+})
 serviceSchema.pre("save", function () {
   if (!this.isModified("name")) return;
   const slugName = slugify(this.name, {
