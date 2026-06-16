@@ -22,7 +22,6 @@ const serviceSchema = new mongoose.Schema(
     },
     gatewaySecret:{
       type:String,
-      required:true
     },
     healthStatus: {
       type: String,
