@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("./jobs/healthCheck");
 const express = require("express");
 const connectToMongoDB = require("./connect");
 const app = express();
