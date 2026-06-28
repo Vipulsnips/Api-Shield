@@ -1,6 +1,6 @@
 require("dotenv").config();
 require("./jobs/healthCheck");
-const cors =require('cors');
+const cors = require("cors");
 const express = require("express");
 const connectToMongoDB = require("./connect");
 const app = express();
@@ -15,14 +15,16 @@ const errorHandler = require("./middlewares/errorHandler");
 const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
-app.use(cors({
-  origin:"http://localhost:5173"
-}))
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://api-shield-eight.vercel.app"],
+  }),
+);
 
 app.get("/", (req, res) => {
   res.json({
     message: "APIShield API is running",
-    docs: "https://github.com/Vipulsnips/Api-Shield#api-endpoints",
+    frontend_url: "https://api-shield-eight.vercel.app",
   });
 });
 app.use("/api/auth", authRouter);
