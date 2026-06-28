@@ -17,14 +17,14 @@ const PORT = process.env.PORT || 8000;
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://api-shield-eight.vercel.app"],
+    origin: ["http://localhost:5173",  process.env.FRONTEND_URL,],
   }),
 );
 
 app.get("/", (req, res) => {
   res.json({
     message: "APIShield API is running",
-    frontend_url: "https://api-shield-eight.vercel.app",
+    frontend_url: process.env.FRONTEND_URL,
   });
 });
 app.use("/api/auth", authRouter);
