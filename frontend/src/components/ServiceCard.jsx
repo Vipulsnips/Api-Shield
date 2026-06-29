@@ -18,6 +18,8 @@ function ServiceCard({
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [logs, setLogs] = useState(null);
   const [showLogs, setShowLogs] = useState(false);
+  const [gatewaySecret, setGatewaySecret] = useState(null);
+  const [showGatewaySecret, setShowGatewaySecret] = useState(false);
   async function createApiKey() {
     try {
       await API.post(`/apiKeys/${service._id}`);
@@ -80,9 +82,30 @@ function ServiceCard({
       toast.error(err.response?.data?.message || "Something went wrong");
     }
   }
+  async function toggleGatewaySecret() {
+    if (showGatewaySecret) {
+      setShowGatewaySecret(false);
+      return;
+    }
+
+    if (gatewaySecret) {
+      setShowGatewaySecret(true);
+      return;
+    }
+
+    try {
+      const response = await API.get(`/services/${service._id}/secret`);
+
+      setGatewaySecret(response.data.gatewaySecret);
+      setShowGatewaySecret(true);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Failed to fetch gateway secret",
+      );
+    }
+  }
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 space-y-6 hover:shadow-xl transition">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-3">
           <ServerStackIcon className="h-7 w-7 text-blue-500" />
@@ -106,10 +129,34 @@ function ServiceCard({
           </span>
         </p>
       </div>
-
       <hr />
+      <div className="mt-4">
+        <h4 className="font-semibold">Gateway Secret</h4>
+        <div className="flex items-center gap-3 mt-2">
+          <code className="bg-gray-100 px-3 py-2 rounded text-sm break-all flex-1">
+            {showGatewaySecret ? gatewaySecret : "••••••••••••••••••••••••••••"}
+          </code>
 
-      {/* API Keys */}
+          <button
+            onClick={toggleGatewaySecret}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded"
+          >
+            {showGatewaySecret ? "Hide" : "Show"}
+          </button>
+
+          <button
+            disabled={!showGatewaySecret}
+            onClick={() => {
+              navigator.clipboard.writeText(gatewaySecret);
+              toast.success("Gateway Secret Copied!");
+            }}
+            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-3 py-2 rounded"
+          >
+            Copy
+          </button>
+        </div>
+      </div>
+      <hr />
       <div>
         <h3 className="flex items-center gap-2 text-lg font-semibold mb-3">
           <KeyIcon className="h-5 w-5 text-yellow-500" />
@@ -141,10 +188,7 @@ function ServiceCard({
       >
         Create API Key
       </button>
-
       <hr />
-
-      {/* Analytics */}
       <div>
         <button
           onClick={toggleAnalytics}
@@ -185,7 +229,7 @@ function ServiceCard({
               <div className="bg-gray-100 rounded-lg p-4 text-center">
                 <p className="text-gray-500">Avg Response</p>
                 <h4 className="text-2xl font-bold">
-                  {analytics.avgResponseTime} ms
+                  {analytics.avgResponseTime.toFixed(2)} ms
                 </h4>
               </div>
             </div>
@@ -239,9 +283,6 @@ function ServiceCard({
       </div>
 
       <hr />
-
-      {/* Actions */}
-
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => checkHealthStatus(service._id)}

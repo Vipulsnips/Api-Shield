@@ -113,12 +113,30 @@ async function rotateGatewaySecret(req, res) {
       "Gateway secret rotated. Update your service's configuration immediately — the old secret no longer works.",
   });
 }
+async function getGatewaySecret(req, res) {
+  const serviceId = req.params.id;
+  const service = await Service.findById(serviceId);
+  if (!service) {
+    return res.status(404).json({
+      message: "Service not found",
+    });
+  }
+  if (service.owner.toString() !== req.user._id.toString()) {
+    return res.status(403).json({
+      message: "Unauthorized",
+    });
+  }
+  return res.status(200).json({
+    gatewaySecret: service.gatewaySecret,
+  });
+}
 module.exports = {
-  createService,
+  createService,  
   getAllServices,
   getServiceById,
   deleteService,
   getMyServices,
   checkHealthById,
   rotateGatewaySecret,
+  getGatewaySecret,
 };

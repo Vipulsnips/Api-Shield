@@ -7,11 +7,13 @@ function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSigningUp, setIsSigningUp] = useState(false);
   const navigate = useNavigate();
   async function createUser(e) {
     e.preventDefault();
+    setIsSigningUp(true);
     try {
-      const response = await API.post("/auth/signup", {
+      await API.post("/auth/signup", {
         name,
         email,
         password,
@@ -21,6 +23,8 @@ function Signup() {
       navigate("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Signup failed");
+    } finally{
+      setIsSigningUp(false);
     }
   }
 return (
@@ -43,6 +47,7 @@ return (
           </label>
 
           <input
+            required
             type="text"
             value={name}
             onChange={(e)=>setName(e.target.value)}
@@ -56,6 +61,7 @@ return (
           </label>
 
           <input
+            required
             type="email"
             value={email}
             onChange={(e)=>setEmail(e.target.value)}
@@ -69,6 +75,7 @@ return (
           </label>
 
           <input
+            required
             type="password"
             value={password}
             onChange={(e)=>setPassword(e.target.value)}
@@ -77,10 +84,11 @@ return (
         </div>
 
         <button
+          disabled={isSigningUp}
           type="submit"
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
         >
-          Create Account
+          {isSigningUp?"Creating User Account":"Create Account"}
         </button>
 
       </form>

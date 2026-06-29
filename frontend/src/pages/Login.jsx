@@ -6,9 +6,11 @@ import toast from "react-hot-toast";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLogging, setIsLogging] = useState(false);
   const navigate = useNavigate();
   async function loginRequestSent(e) {
     e.preventDefault();
+    setIsLogging(true);
     try {
       const response = await API.post("/auth/login", {
         email,
@@ -19,71 +21,60 @@ function Login() {
       navigate("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
+    } finally {
+      setIsLogging(false);
     }
   }
-return (
-  <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+  return (
+    <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+      <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">
+          APIShield
+        </h1>
 
-    <div className="bg-white shadow-xl rounded-xl p-8 w-full max-w-md">
+        <p className="text-center text-gray-500 mb-8">Welcome Back 👋</p>
 
-      <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">
-        APIShield
-      </h1>
+        <form onSubmit={loginRequestSent} className="space-y-5">
+          <div>
+            <label className="block font-medium mb-2">Email</label>
 
-      <p className="text-center text-gray-500 mb-8">
-        Welcome Back 👋
-      </p>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-      <form onSubmit={loginRequestSent} className="space-y-5">
+          <div>
+            <label className="block font-medium mb-2">Password</label>
 
-        <div>
-          <label className="block font-medium mb-2">
-            Email
-          </label>
+            <input
+              required
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-          <input
-            type="email"
-            value={email}
-            onChange={(e)=>setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium mb-2">
-            Password
-          </label>
-
-          <input
-            type="password"
-            value={password}
-            onChange={(e)=>setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
-        >
-          Login
-        </button>
-
-      </form>
-
-      <p className="text-center text-gray-500 mt-6">
-        Don't have an account?{" "}
-        <Link
-          to="/signup"
-          className="text-blue-600 hover:underline"
-        >
-          Sign Up
-        </Link>
-      </p>
-
+          <button
+            disabled={isLogging}
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+          >
+            {isLogging ? "Logging You In" : "Login"}
+          </button>
+        </form>
+        <p className="text-center text-gray-500 mt-6">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-blue-600 hover:underline">
+            Sign Up
+          </Link>
+        </p>
+      </div>
     </div>
-
-  </div>
-);
+  );
 }
 export default Login;
