@@ -1,51 +1,110 @@
-# APIShield
-![Node.js](https://img.shields.io/badge/Node.js-Backend-green)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-green)
-![Redis](https://img.shields.io/badge/Redis-Upstash-red)
-![Render](https://img.shields.io/badge/Deploy-Render-blue)
+# 🛡️ APIShield
 
-APIShield is a production-oriented API Gateway and API Management Platform that enables developers to register backend services, generate API keys, enforce rate limits, monitor traffic, and route requests through a centralized gateway.
+<p align="center">
+  <b>A Full-Stack API Gateway & API Management Platform</b><br>
+  Built with <b>Node.js, Express, MongoDB, Redis, React, and Tailwind CSS</b>
+</p>
 
-The platform includes authentication, API key management, request analytics, health monitoring, Redis-backed rate limiting, and cloud deployment using MongoDB Atlas, Upstash Redis, and Render.
-
-## Live Demo
-
-**Deployment:** https://api-shield-1e4k.onrender.com/
-
-**Repository:** https://github.com/Vipulsnips/Api-Shield
-
-> **Note:** This is a backend-only API service with no frontend UI. Visiting the base URL returns a JSON status message. Use the endpoints listed below with a tool like Postman, curl, or Thunder Client.
-
----
-
-## Highlights
-
-- Built a centralized API Gateway capable of routing requests to registered services.
-- Implemented Redis-backed fixed-window rate limiting.
-- Secured routes using JWT authentication and ownership based authorization.
-- Deployed using MongoDB Atlas, Upstash Redis, and Render.
-- Built analytics using MongoDB Aggregation Pipelines to track request volume, success rate, failure rate, and average response time.
+<p align="center">
+<img src="https://img.shields.io/badge/Node.js-Backend-green" />
+<img src="https://img.shields.io/badge/Express.js-API-black" />
+<img src="https://img.shields.io/badge/React-Frontend-61DAFB" />
+<img src="https://img.shields.io/badge/TailwindCSS-UI-38BDF8" />
+<img src="https://img.shields.io/badge/MongoDB-Atlas-green" />
+<img src="https://img.shields.io/badge/Redis-Upstash-red" />
+<img src="https://img.shields.io/badge/Deployment-Render-blue" />
+<img src="https://img.shields.io/badge/Frontend-Vercel-black" />
+<img src="https://img.shields.io/badge/Version-v1.0.0-success" />
+</p>
 
 ---
 
-## Features
+## 🚀 Overview
 
-* JWT-based Authentication
-* Service Registration & Management
-* API Key Generation & Revocation
-* API Gateway Request Forwarding
-* Request Logging
-* Analytics & Usage Statistics
-* Redis-based Rate Limiting
-* Service Health Checks
-* Ownership-based Authorization
-* Global Error Handling
-* MongoDB Atlas Integration
-* Render Deployment
+APIShield is a production oriented **API Gateway and API Management Platform** that enables developers to securely expose backend services through a centralized gateway.
+
+It allows authenticated users to register services, generate API keys, enforce Redis backed rate limits, monitor service health, collect request analytics, and securely proxy client requests to backend services.
+
+The project demonstrates real world backend engineering concepts such as API Gateway design, request forwarding, authentication, authorization, rate limiting, analytics, health monitoring, and cloud deployment.
 
 ---
 
-## Architecture
+## 🌐 Live Demo
+
+| | |
+|---|---|
+| **Frontend** | https://api-shield-eight.vercel.app |
+| **Backend API** | https://api-shield-1e4k.onrender.com |
+| **Repository** | https://github.com/Vipulsnips/Api-Shield |
+
+> This is a full stack application. The backend API has no root UI — visit the frontend link above for the dashboard.
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication
+- User Signup & Login
+- JWT based Authentication
+- Protected Routes (frontend + backend)
+- Current User Endpoint
+
+### 🚀 Service Management
+- Register Backend Services with Auto Slug Generation
+- Delete Owned Services
+- Ownership based Authorization
+
+### 🔑 API Key Management
+- Generate & Delete API Keys
+- Associate Keys with Individual Services
+
+### 🌉 API Gateway
+- Centralized Gateway Routing
+- API Key Validation
+- Dynamic Request Forwarding (method, body, query params, headers)
+- Header Sanitization
+- Gateway Secret Authentication (per-service secret attached to every forwarded request)
+
+### 📊 Analytics
+- Per-request Logging (status code, response time, method, path)
+- Aggregated Stats: Total, Successful, Failed Requests & Avg Response Time
+- MongoDB Aggregation Pipelines
+
+### ❤️ Health Monitoring
+- Manual Health Checks
+- Automated Scheduled Health Checks via `node-cron` (every 5 minutes)
+- Healthy / Unhealthy Status with Last Checked Timestamp
+
+### ⚡ Rate Limiting
+- Redis-backed Fixed Window Rate Limiting
+- 10 Requests per Minute per API Key
+
+---
+
+## 🏗️ System Architecture
+
+```text
+                    React Frontend (Vercel)
+                           │
+                           ▼
+                  Express API (Render)
+                           │
+       ┌───────────────────┼───────────────────┐
+       ▼                   ▼                   ▼
+ Authentication      Service Manager      Analytics
+                           │
+                           ▼
+                     MongoDB Atlas
+                  (Users, Services,
+                  API Keys, Request Logs)
+
+Redis (Upstash)          Cron Scheduler
+└── Rate Limiting        └── Health Monitoring
+```
+
+---
+
+## 🔄 Request Flow
 
 ```text
 Client
@@ -53,177 +112,178 @@ Client
    ▼
 APIShield Gateway
    │
-   ├── API Key Validation
+   ├── Validate API Key
    ├── Redis Rate Limiting
-   ├── Forward to Target Service
-   └── Log Request Result
-   │
-   ▼
-Target Service
-   │
-   ▼
-Response
-
-MongoDB Atlas
-├── Users
-├── Services
-├── API Keys
-└── Request Logs
-
-Redis (Upstash)
-└── Rate Limiting Counters
+   ├── Sanitize & Forward Request (with x-gateway-secret)
+   ├── Capture Response
+   ├── Store Analytics Log
+   └── Return Response to Client
+        │
+        ▼
+Target Backend Service
 ```
 
 ---
 
-## Tech Stack
+## ⚙️ Tech Stack
 
-### Backend
+| Layer | Technology |
+|---|---|
+| Frontend | React, React Router, Tailwind CSS, Axios |
+| Backend | Node.js, Express.js |
+| Database | MongoDB Atlas, Mongoose |
+| Caching & Rate Limiting | Redis (Upstash) |
+| Authentication | JWT (Bearer Token) |
+| Scheduler | node-cron |
+| Deployment | Render (backend), Vercel (frontend) |
 
-* Node.js
-* Express.js
+---
 
-### Database
-
-* MongoDB Atlas
-* Mongoose
-
-### Caching & Rate Limiting
-
-* Redis (Upstash)
+## 📚 REST API Reference
 
 ### Authentication
 
-* JWT (Bearer Token)
-
-### Deployment
-
-* Render
-
----
-
-## Core Workflow
-
-1. User registers and logs in.
-2. User creates a service.
-3. User generates an API key.
-4. Client sends requests through the API gateway.
-5. Gateway validates the API key.
-6. Redis enforces rate limits.
-7. Request is forwarded to the target service.
-8. Request metadata is logged.
-9. Analytics are generated from collected logs.
-
----
-
-## Rate Limiting
-
-APIShield uses Redis-based rate limiting.
-
-Current configuration:
-
-* 10 requests per minute per API key
-
----
-
-## API Management Features
-
-### Service Management
-
-* Register backend services
-* View service information
-* Delete owned services
-* Health status monitoring
-
-### API Key Management
-
-* Generate API keys
-* Revoke (delete) API keys
-* Associate keys with services
-
-### Analytics
-
-* Total Requests
-* Successful Requests
-* Failed Requests
-* Average Response Time
-
----
-
-## API Endpoints
-
-### Auth
-* `POST /api/auth/signup` — Register a new user
-* `POST /api/auth/login` — Log in and receive a JWT
-* `POST /api/auth/logout` — Logout (client-side token discard)
-* `GET /api/auth/me` — Get current authenticated user
+| Method | Endpoint |
+|--------|----------|
+| POST | `/api/auth/signup` |
+| POST | `/api/auth/login` |
+| POST | `/api/auth/logout` |
+| GET | `/api/auth/me` |
 
 ### Services
-* `POST /api/services` — Register a new service
-* `GET /api/services/me` — List your services
-* `GET /api/services/:id` — Get a service by ID
-* `DELETE /api/services/:id` — Delete an owned service
-* `POST /api/services/:id/check-health` — Check service health status
+
+| Method | Endpoint |
+|--------|----------|
+| POST | `/api/services` |
+| GET | `/api/services/me` |
+| GET | `/api/services/:id` |
+| DELETE | `/api/services/:id` |
+| POST | `/api/services/:id/check-health` |
 
 ### API Keys
-* `POST /api/apiKeys/:serviceId` — Generate an API key for a service
-* `GET /api/apiKeys` — List your API keys
-* `DELETE /api/apiKeys/:id` — Revoke an API key
+
+| Method | Endpoint |
+|--------|----------|
+| POST | `/api/apiKeys/:serviceId` |
+| GET | `/api/apiKeys` |
+| DELETE | `/api/apiKeys/:id` |
 
 ### Gateway
-* `ALL /api/gateway/:slug` — Forward a request to a registered service
-* `ALL /api/gateway/:slug/*` — Forward a request with a sub-path to a registered service
+
+| Method | Endpoint |
+|--------|----------|
+| ALL | `/api/gateway/:slug` |
+| ALL | `/api/gateway/:slug/*` |
 
 ### Analytics
-* `GET /api/analytics/service/:serviceId/logs` — Get raw request logs for a service
-* `GET /api/analytics/service/:serviceId` — Get aggregated request statistics for a service
+
+| Method | Endpoint |
+|--------|----------|
+| GET | `/api/analytics/service/:serviceId` |
+| GET | `/api/analytics/service/:serviceId/logs` |
 
 ---
 
-## Environment Variables
+## 📊 Analytics Collected Per Request
 
-Create a `.env` file:
-
-```env
-MONGO_URL=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-REDIS_URL=your_redis_connection_string
-PORT=8000
-```
+| Field | Description |
+|---|---|
+| `responseTime` | Time taken to get response from upstream |
+| `statusCode` | HTTP status returned by upstream |
+| `method` | HTTP method (GET, POST, etc.) |
+| `path` | Forwarded path |
+| `service` | Service ID |
+| `apiKey` | API Key used |
+| `createdAt` | Timestamp |
 
 ---
 
-## Running Locally
+## 🖥️ Local Setup
 
 ```bash
 git clone https://github.com/Vipulsnips/Api-Shield.git
+cd Api-Shield
+```
 
-cd Api-Shield/backend
+### Backend
 
+```bash
+cd backend
 npm install
+npm run dev
+```
 
-npm start
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
-## Future Enhancements
+## 🔐 Environment Variables
 
-* Gateway-to-Service Secret Protection
-* SSRF Protection for Registered Service URLs
-* Standardized `/health` Endpoint for Services
-* Load Balancing Across Multiple Service Instances
-* Service Discovery
-* Advanced Analytics Dashboard
+### Backend `.env`
+
+```env
+PORT=8000
+MONGO_URL=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+REDIS_URL=your_redis_connection_string
+```
+
+### Frontend `.env`
+
+```env
+VITE_API_URL=http://localhost:8000/api
+```
 
 ---
 
-## Technical Concepts Demonstrated
+## 🎯 Technical Concepts Demonstrated
 
-- API Gateway Design
+- API Gateway Architecture & Reverse Proxy Pattern
 - JWT Authentication & Authorization
-- Redis-based Rate Limiting
+- API Key Management & Validation
+- Redis-backed Rate Limiting
+- Request Forwarding with Header Sanitization
+- Gateway Secret Authentication
 - MongoDB Aggregation Pipelines
-- Request Analytics
-- Cloud Deployment
-- Service Health Monitoring
+- Automated Health Monitoring with Cron Jobs
+- Middleware Design & Global Error Handling
+- REST API Design
+- Protected React Routes
+- Full-Stack Cloud Deployment
+
+---
+
+## 🚀 Roadmap
+
+### v1.1
+- API Key Enable/Disable Toggle
+- Request Log Retention & Cleanup (TTL Index)
+- SSRF Protection on Service URLs
+- Docker & Docker Compose Support
+
+### v2.0
+- Load Balancing Across Multiple Service Instances
+- Service Discovery
+- OpenAPI (Swagger) Documentation
+- CI/CD Pipeline
+
+---
+
+## 👨‍💻 Author
+
+**Vipul Rawat**
+
+- GitHub: https://github.com/Vipulsnips
+- LinkedIn: https://www.linkedin.com/in/vipul-rawat-codes
+
+---
+
+## ⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub!
