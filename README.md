@@ -159,6 +159,7 @@ Target Backend Service
 | GET | `/api/services/:id` |
 | DELETE | `/api/services/:id` |
 | POST | `/api/services/:id/check-health` |
+| GET | `/api/services/:id/secret` |
 
 ### API Keys
 
@@ -181,6 +182,29 @@ Target Backend Service
 |--------|----------|
 | GET | `/api/analytics/service/:serviceId` |
 | GET | `/api/analytics/service/:serviceId/logs` |
+
+---
+
+### 🔐 Gateway Secret Authentication
+
+Every registered service is assigned a unique **Gateway Secret** that identifies requests forwarded through APIShield.
+
+Retrieve the secret at any time using:
+
+```http
+GET /api/services/:id/secret
+```
+
+> **Note:** Only the owner of the service can access this endpoint.
+
+When APIShield forwards a request to your backend service, it automatically includes the following header:
+
+```http
+x-gateway-secret: <your-service-secret>
+```
+
+Your backend service should verify that the received `x-gateway-secret` matches the stored Gateway Secret before processing the request. This ensures that requests originate from **APIShield** and not from clients attempting to bypass the gateway and call your service directly.
+s.
 
 ---
 
