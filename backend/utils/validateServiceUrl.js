@@ -1,6 +1,6 @@
 const net = require("net");
 function isPrivateIPv4(ip) {
-  const parts = ip.split(".");
+  const parts = ip.split(".").map(Number);
   // Private Class A
   if (parts[0] === 10) return true;
 

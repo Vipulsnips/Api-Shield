@@ -1,4 +1,3 @@
-const ApiKey = require("../models/apiKey");
 const RequestLog = require("../models/requestLog");
 const Service = require("../models/service");
 const axios = require("axios");
@@ -42,7 +41,7 @@ async function handleRequest(req, res) {
   let index = Number((await redisClient.get(redisKey)) ?? 0);
   index %= healthyInstances.length;
   const selectedInstance = healthyInstances[index];
-  await redisClient.incr(redisKey);
+  await redisClient.set(redisKey, (index + 1) % healthyInstances.length);
   const remainingPath = req.params.rest ? "/" + req.params.rest.join("/") : "";
   const forwardUrl = selectedInstance.url.toString() + remainingPath;
   const start = Date.now();
