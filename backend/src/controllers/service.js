@@ -2,18 +2,18 @@ const Service = require("../models/service");
 const axios = require("axios");
 const crypto = require("crypto");
 const validateServiceUrl = require("../../utils/validateServiceUrl");
-async function createService(req, res) {
+async function createService(req, res, next) {
   const { name, baseurl } = req.body;
   if (!name || !baseurl) {
-    return res.status(400).json({
-      message: "Name and baseurl required",
-    });
+    const error = new Error("Name and baseurl required");
+    error.statusCode = 400;
+    return next(error);
   }
   const validation = validateServiceUrl(baseurl);
   if (!validation.valid) {
-    return res.status(400).json({
-      message: validation.message,
-    });
+    const error = new Error(validation.message);
+    error.statusCode = 400;
+    return next(error);
   }
   const user = req.user;
   const service = await Service.create({
@@ -36,33 +36,40 @@ async function getAllServices(req, res) {
   const allServices = await Service.find({}).select("-gatewaySecret");
   return res.json(allServices);
 }
-async function getServiceById(req, res) {
+async function getServiceById(req, res, next) {
   const id = req.params.id;
-  if (!id)
-    return res.status(400).json({
-      message: "Id required",
-    });
+  if (!id) {
+    const error = new Error("Id required");
+    error.statusCode = 400;
+    return next(error);
+  }
   const service = await Service.findById(id).select("-gatewaySecret");
-  if (!service)
-    return res.status(400).json({ message: "Service does not exist." });
+  if (!service) {
+    const error = new Error("Service does not exist.");
+    error.statusCode = 404;
+    return next(error);
+  }
   return res.status(200).json(service);
 }
-async function deleteService(req, res) {
+async function deleteService(req, res, next) {
   const id = req.params.id;
   const user = req.user;
   if (!id) {
-    return res.status(400).json({
-      message: "Id required",
-    });
+    const error = new Error("Id required");
+    error.statusCode = 400;
+    return next(error);
   }
   const service = await Service.findById(id);
   if (!service) {
-    return res.status(404).json({
-      message: "Service not found",
-    });
+    const error = new Error("Service not found.");
+    error.statusCode = 404;
+    return next(error);
   }
-  if (user._id.toString() !== service.owner.toString())
-    return res.status(403).json({ message: "Forbidden" });
+  if (user._id.toString() !== service.owner.toString()) {
+    const error = new Error("You do not own this service.");
+    error.statusCode = 403;
+    return next(error);
+  }
   await Service.findByIdAndDelete(id);
   return res.json({ message: "Success." });
 }
@@ -71,46 +78,58 @@ async function getMyServices(req, res) {
   const services = await Service.find({ owner }).select("-gatewaySecret");
   return res.json(services);
 }
-async function checkHealthById(req, res) {
+async function checkHealthById(req, res, next) {
   const id = req.params.id;
   const service = await Service.findById(id);
   if (!service) {
-    return res.status(404).json({
-      message: "Service not found",
-    });
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    return next(error);
   }
   const user = req.user;
   if (service.owner.toString() !== user._id.toString()) {
-    return res.status(403).json({
-      message: "Forbidden",
+    const error = new Error("You do not own this service");
+    error.statusCode = 403;
+    return next(error);
+  }
+  const results = [],
+    checkedAt = new Date();
+  for (const instance of service.instances) {
+    try {
+      await axios.get(instance.url, {
+        timeout: 3000,
+        validateStatus: () => true,
+      });
+      instance.healthStatus = "healthy";
+    } catch (err) {
+      instance.healthStatus = "unhealthy";
+    }
+    instance.lastChecked = checkedAt;
+    results.push({
+      url: instance.url,
+      healthStatus: instance.healthStatus,
+      lastChecked: instance.lastChecked,
     });
   }
-  try {
-    await axios.get(service.baseurl.toString());
-    service.healthStatus = "healthy";
-    service.lastChecked = new Date();
-    await service.save();
-    return res.status(200).json({
-      status: "healthy",
-    });
-  } catch (err) {
-    service.healthStatus = "unhealthy";
-    service.lastChecked = new Date();
-    await service.save();
-    return res.status(200).json({
-      status: "unhealthy",
-    });
-  }
+  await service.save();
+  return res.status(200).json({
+    message: "Health check completed",
+    instances: results,
+  });
 }
-async function rotateGatewaySecret(req, res) {
+async function rotateGatewaySecret(req, res, next) {
   const id = req.params.id;
   const user = req.user;
   const service = await Service.findById(id);
   if (!service) {
-    return res.status(404).json({ message: "Service not found" });
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    return next(error);
   }
   if (service.owner.toString() !== user._id.toString()) {
-    return res.status(403).json({ message: "Forbidden" });
+    const error = new Error("You do not own this service");
+    error.statusCode = 403;
+    return next(error);
   }
   service.gatewaySecret = crypto.randomBytes(32).toString("hex");
   await service.save();
@@ -120,61 +139,61 @@ async function rotateGatewaySecret(req, res) {
       "Gateway secret rotated. Update your service's configuration immediately — the old secret no longer works.",
   });
 }
-async function getGatewaySecret(req, res) {
+async function getGatewaySecret(req, res, next) {
   const serviceId = req.params.id;
   const service = await Service.findById(serviceId);
   if (!service) {
-    return res.status(404).json({
-      message: "Service not found",
-    });
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    return next(error);
   }
   if (service.owner.toString() !== req.user._id.toString()) {
-    return res.status(403).json({
-      message: "Unauthorized",
-    });
+    const error = new Error("You do not own this service");
+    error.statusCode = 403;
+    return next(error);
   }
   return res.status(200).json({
     gatewaySecret: service.gatewaySecret,
   });
 }
-async function addInstance(req, res) {
+async function addInstance(req, res, next) {
   const serviceId = req.params.id;
   const { url } = req.body;
 
   if (!url) {
-    return res.status(400).json({
-      message: "Instance URL is required",
-    });
+    const error = new Error("Instance URL is required");
+    error.statusCode = 400;
+    return next(error);
   }
 
   const validation = validateServiceUrl(url);
 
   if (!validation.valid) {
-    return res.status(400).json({
-      message: validation.message,
-    });
+    const error = new Error(validation.message);
+    error.statusCode = 400;
+    return next(error);
   }
 
   const service = await Service.findById(serviceId);
 
   if (!service) {
-    return res.status(404).json({
-      message: "Service not found",
-    });
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    return next(error);
   }
 
   if (service.owner.toString() !== req.user._id.toString()) {
-    return res.status(403).json({
-      message: "Forbidden",
-    });
+    const error = new Error("You do not own this service");
+    error.statusCode = 403;
+    return next(error);
   }
   const alreadyExists = service.instances.some((instance) => {
     return instance.url === url;
   });
   if (alreadyExists) {
-    return res.status(409).json({
-      message: "Instance already exists",
-    });
+    const error = new Error("Instance already exists");
+    error.statusCode = 409;
+    return next(error);
   }
   service.instances.push({
     url,
@@ -187,31 +206,39 @@ async function addInstance(req, res) {
     instances: service.instances,
   });
 }
-async function getInstances(req, res) {
+async function getInstances(req, res, next) {
   const id = req.params.id;
   const service = await Service.findById(id);
   if (!service) {
-    return res.status(404).json({ message: "Service not found" });
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    return next(error);
   }
   if (service.owner.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ message: "Forbidden" });
+    const error = new Error("You do not own this service");
+    error.statusCode = 403;
+    return next(error);
   }
   return res.status(200).json(service.instances);
 }
-async function deleteInstance(req, res) {
+async function deleteInstance(req, res, next) {
   const { id, instanceId } = req.params;
   const service = await Service.findById(id);
   if (!service) {
-    return res.status(404).json({ message: "Service not found" });
+    const error = new Error("Service not found");
+    error.statusCode = 404;
+    return next(error);
   }
   if (service.owner.toString() !== req.user._id.toString()) {
-    return res.status(403).json({ message: "Forbidden" });
+    const error = new Error("You do not own this service");
+    error.statusCode = 403;
+    return next(error);
   }
   const instance = service.instances.id(instanceId);
   if (!instance) {
-    return res.status(404).json({
-      message: "Instance not found",
-    });
+    const error = new Error("Instance not found");
+    error.statusCode = 404;
+    return next(error);
   }
   instance.deleteOne();
   await service.save();
