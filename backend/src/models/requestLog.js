@@ -1,4 +1,3 @@
-const { request } = require("express");
 const mongoose = require("mongoose");
 
 const requestLogSchema = new mongoose.Schema({
@@ -9,6 +8,10 @@ const requestLogSchema = new mongoose.Schema({
   apiKey: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "apiKey",
+  },
+  instanceUrl:{
+    type:String,
+    required:true
   },
   statusCode: Number,
   method: String,

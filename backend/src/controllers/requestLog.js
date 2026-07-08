@@ -16,12 +16,18 @@ async function getSummaryOfRequestLog(req, res) {
   const serviceId = req.params.serviceId;
   if (!serviceId)
     return res.status(400).json({
-      message: "Service Id not provide",
+      message: "Service Id not provided",
     });
+  if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+    return res.status(400).json({
+      message: "Invalid service ID",
+    });
+  }
+  const serviceObjectId = new mongoose.Types.ObjectId(serviceId);
   const result = await RequestLog.aggregate([
     {
       $match: {
-        service: new mongoose.Types.ObjectId(serviceId),
+        service: serviceObjectId,
       },
     },
     {
@@ -54,12 +60,55 @@ async function getSummaryOfRequestLog(req, res) {
       },
     },
   ]);
+  const instanceStats = await RequestLog.aggregate([
+    {
+      $match: {
+        service: serviceObjectId,
+      },
+    },
+    {
+      $group: {
+        _id: "$instanceUrl",
+
+        totalRequests: {
+          $sum: 1,
+        },
+
+        avgResponseTime: {
+          $avg: "$responseTime",
+        },
+
+        successRequests: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $gte: ["$statusCode", 200] },
+                  { $lt: ["$statusCode", 300] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+  ]);
+  const instances = instanceStats.map((instance) => ({
+    instanceUrl: instance._id,
+    totalRequests: instance.totalRequests,
+    successRequests: instance.successRequests,
+    failedRequests: instance.totalRequests - instance.successRequests,
+    avgResponseTime: Number(instance.avgResponseTime.toFixed(2)),
+  }));
   if (result.length === 0) {
     return res.status(200).json({
       totalRequests: 0,
       successRequests: 0,
       failedRequests: 0,
       avgResponseTime: 0,
+      instances: instances,
     });
   }
   const stats = result[0];
@@ -68,10 +117,10 @@ async function getSummaryOfRequestLog(req, res) {
     totalRequests: stats.totalRequests,
     successRequests: stats.successRequests,
     failedRequests,
-    avgResponseTime: stats.avgResponseTime,
+    avgResponseTime: Number(stats.avgResponseTime.toFixed(2)),
+    instances: instances,
   });
 }
-
 
 module.exports = {
   getRequestLogsById,

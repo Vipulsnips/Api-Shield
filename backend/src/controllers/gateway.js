@@ -65,6 +65,7 @@ async function handleRequest(req, res) {
       statusCode: response.status,
       method: req.method,
       path: remainingPath,
+      instanceUrl:selectedInstance.url
     });
     return res.status(response.status).send(response.data);
   } catch (error) {
@@ -72,9 +73,9 @@ async function handleRequest(req, res) {
       selectedInstance.healthStatus = "unhealthy";
       selectedInstance.lastChecked = new Date();
       await service.save();
-      let retryInstance;
+      let retryInstance,retryForwardUrl,retryInstances;
       try {
-        const retryInstances = healthyInstances.filter(
+        retryInstances = healthyInstances.filter(
           (instance) =>
             instance._id.toString() !== selectedInstance._id.toString(),
         );
@@ -84,7 +85,7 @@ async function handleRequest(req, res) {
           });
         }
         retryInstance = retryInstances[0];
-        const retryForwardUrl = retryInstance.url.toString() + remainingPath;
+        retryForwardUrl = retryInstance.url.toString() + remainingPath;
         const response = await forwardRequest(
           retryForwardUrl,
           req,
@@ -99,6 +100,7 @@ async function handleRequest(req, res) {
           statusCode: response.status,
           method: req.method,
           path: remainingPath,
+          instanceUrl:retryInstances[0].url
         });
         return res.status(response.status).send(response.data);
       } catch (retryError) {
@@ -115,6 +117,7 @@ async function handleRequest(req, res) {
           statusCode: retryError.response?.status || 500,
           method: req.method,
           path: remainingPath,
+          instanceUrl:retryInstance.url
         });
         if (retryError.response) {
           return res
