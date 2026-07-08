@@ -16,26 +16,27 @@ async function forwardRequest(forwardUrl, req, forwardHeaders, service) {
     validateStatus: () => true,
   });
 }
-async function handleRequest(req, res) {
+async function handleRequest(req, res, next) {
   const apiKey = req.apiKey;
   const slug = req.params.slug;
   const service = await Service.findOne({ slug });
-  if (!service)
-    return res.status(404).json({
-      message: "Service not found",
-    });
+  if (!service) {
+    const error = new Error("Service does not exist.");
+    error.statusCode = 404;
+    return next(error);
+  }
   if (service._id.toString() !== apiKey.service.toString()) {
-    return res.status(403).json({
-      message: "API Key does not belong to this service",
-    });
+    const error = new Error("You do not own this service.");
+    error.statusCode = 403;
+    return next(error);
   }
   const healthyInstances = service.instances.filter(
     (instance) => instance.healthStatus === "healthy",
   );
   if (healthyInstances.length === 0) {
-    return res.status(503).json({
-      message: "No healthy instances available",
-    });
+    const error = new Error("No healthy instances available");
+    error.statusCode = 503;
+    return next(error);
   }
   const redisKey = `rr:${service._id}`;
   let index = Number((await redisClient.get(redisKey)) ?? 0);
@@ -65,7 +66,7 @@ async function handleRequest(req, res) {
       statusCode: response.status,
       method: req.method,
       path: remainingPath,
-      instanceUrl:selectedInstance.url
+      instanceUrl: selectedInstance.url,
     });
     return res.status(response.status).send(response.data);
   } catch (error) {
@@ -73,16 +74,16 @@ async function handleRequest(req, res) {
       selectedInstance.healthStatus = "unhealthy";
       selectedInstance.lastChecked = new Date();
       await service.save();
-      let retryInstance,retryForwardUrl,retryInstances;
+      let retryInstance, retryForwardUrl, retryInstances;
       try {
         retryInstances = healthyInstances.filter(
           (instance) =>
             instance._id.toString() !== selectedInstance._id.toString(),
         );
         if (retryInstances.length === 0) {
-          return res.status(503).json({
-            message: "No healthy instances available",
-          });
+          const error = new Error("No healthy instances available");
+          error.statusCode = 503;
+          return next(error);
         }
         retryInstance = retryInstances[0];
         retryForwardUrl = retryInstance.url.toString() + remainingPath;
@@ -100,7 +101,7 @@ async function handleRequest(req, res) {
           statusCode: response.status,
           method: req.method,
           path: remainingPath,
-          instanceUrl:retryInstances[0].url
+          instanceUrl: retryInstance.url,
         });
         return res.status(response.status).send(response.data);
       } catch (retryError) {
@@ -117,16 +118,16 @@ async function handleRequest(req, res) {
           statusCode: retryError.response?.status || 500,
           method: req.method,
           path: remainingPath,
-          instanceUrl:retryInstance.url
+          instanceUrl: retryInstance?.url,
         });
         if (retryError.response) {
           return res
             .status(retryError.response.status)
             .send(retryError.response.data);
         }
-        return res.status(503).json({
-          message: "No healthy instances available"
-        });
+        const error = new Error("No healthy instances available");
+        error.statusCode = 503;
+        return next(error);
       }
     }
     return res.status(error.response.status).send(error.response.data);

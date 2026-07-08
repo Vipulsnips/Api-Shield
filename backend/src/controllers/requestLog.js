@@ -1,27 +1,34 @@
 const mongoose = require("mongoose");
 const RequestLog = require("../models/requestLog");
-async function getRequestLogsById(req, res) {
+async function getRequestLogsById(req, res, next) {
   const serviceId = req.params.serviceId;
-  if (!serviceId)
-    return res.status(400).json({
-      message: "Service Id not provide",
-    });
+  if (!serviceId) {
+    const error = new Error("Service does not exist.");
+    error.statusCode = 404;
+    return next(error);
+  }
+  if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+    const error = new Error("Invalid service id");
+    error.statusCode = 400;
+    return next(error);
+  }
   const requestLogs = await RequestLog.find({
     service: serviceId,
   });
   return res.status(200).json(requestLogs);
 }
 
-async function getSummaryOfRequestLog(req, res) {
+async function getSummaryOfRequestLog(req, res, next) {
   const serviceId = req.params.serviceId;
-  if (!serviceId)
-    return res.status(400).json({
-      message: "Service Id not provided",
-    });
+  if (!serviceId) {
+    const error = new Error("Service does not exist.");
+    error.statusCode = 404;
+    return next(error);
+  }
   if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-    return res.status(400).json({
-      message: "Invalid service ID",
-    });
+    const error = new Error("Invalid service id");
+    error.statusCode = 400;
+    return next(error);
   }
   const serviceObjectId = new mongoose.Types.ObjectId(serviceId);
   const result = await RequestLog.aggregate([

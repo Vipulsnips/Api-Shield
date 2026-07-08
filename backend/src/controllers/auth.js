@@ -1,45 +1,42 @@
 const User = require("../models/users");
 const { setUser } = require("../service/auth");
 
-async function signupUser(req, res) {
+async function signupUser(req, res, next) {
   const { name, email, password } = req.body;
-  try {
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
-    const token = setUser(user);
-    return res.status(201).json({
-      token,
-    });
-  } catch (err) {
-    if (err.code === 11000) {
-      return res.status(400).json({
-        message: "User already exists",
-      });
-    }
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    const error = new Error("User already exists");
+    error.statusCode = 409;
+    return next(error);
   }
+  const user = await User.create({
+    name,
+    email,
+    password,
+  });
+  const token = setUser(user);
+  return res.status(201).json({
+    token,
+  });
 }
-async function loginUser(req, res) {
+async function loginUser(req, res, next) {
   const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
-    const isMatch = await user.matchPassword(password);
-    if (isMatch) {
-      const token = setUser(user);
-      return res.json({
-        token,
-      });
-    }
-    return res.status(401).json({ message: "Invalid credentials" });
-  } catch {
-    return res.status(500).json({ message: "Internal server error" });
+  const user = await User.findOne({ email });
+  if (!user) {
+    const error = new Error("Invalid credentials");
+    error.statusCode = 401;
+    return next(error);
   }
+  const isMatch = await user.matchPassword(password);
+  if (!isMatch) {
+    const error = new Error("Invalid credentials");
+    error.statusCode = 401;
+    return next(error);
+  }
+  const token = setUser(user);
+  return res.json({
+    token,
+  });
 }
 function logoutUser(req, res) {
   return res.json({
