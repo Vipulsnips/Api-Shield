@@ -34,7 +34,7 @@ async function deleteApiKey(req, res, next) {
     return next(error);
   }
   if (user._id.toString() !== apiKey.owner.toString()) {
-    const error = new Error("You do not own this API key.");
+    const error = new Error("You do not own this service.");
     error.statusCode = 403;
     return next(error);
   }
