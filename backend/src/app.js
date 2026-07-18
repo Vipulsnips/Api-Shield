@@ -1,6 +1,7 @@
 require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
+const compression = require('compression');
 
 const app = express();
 
@@ -14,6 +15,7 @@ const { checkForAuthentication } = require("./middlewares/auth");
 const errorHandler = require("./middlewares/errorHandler");
 
 app.use(express.json());
+app.use(compression());
 
 app.use(
   cors({
