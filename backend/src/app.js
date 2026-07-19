@@ -1,7 +1,8 @@
 require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
-const compression = require('compression');
+const compression = require("compression");
+const helmet = require("helmet");
 
 const app = express();
 
@@ -16,13 +17,11 @@ const errorHandler = require("./middlewares/errorHandler");
 
 app.use(express.json());
 app.use(compression());
+app.use(helmet());
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      process.env.FRONTEND_URL,
-    ],
+    origin: ["http://localhost:5173", process.env.FRONTEND_URL],
   }),
 );
 
