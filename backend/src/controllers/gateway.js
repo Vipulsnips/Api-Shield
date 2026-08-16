@@ -49,13 +49,11 @@ async function handleRequest(req, res, next) {
 
   const redisKey = `rr:${service._id}`;
 
-  let index = Number((await redisClient.get(redisKey)) ?? 0);
+  const counter = await redisClient.incr(redisKey);
 
-  index %= healthyInstances.length;
+  const index = (counter - 1) % healthyInstances.length;
 
   const selectedInstance = healthyInstances[index];
-
-  await redisClient.set(redisKey, (index + 1) % healthyInstances.length);
 
   const remainingPath = req.params.rest ? "/" + req.params.rest.join("/") : "";
 
