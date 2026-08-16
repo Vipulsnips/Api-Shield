@@ -5,7 +5,7 @@ const compression = require("compression");
 const helmet = require("helmet");
 
 const app = express();
-
+const logger = require("./config/logger");
 const authRouter = require("./routers/auth");
 const serviceRouter = require("./routers/service");
 const apiKeyRouter = require("./routers/apiKey");
